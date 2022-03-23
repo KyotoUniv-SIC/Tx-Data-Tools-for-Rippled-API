@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":"./node_modules/.bin/ts-node main.ts",
+    "start": "sudo ./node_modules/.bin/ts-node main.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,5 +24,9 @@
     "prettier": "^2.5.1",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "csv-writer": "^1.6.0",
+    "jsonrpc-ts": "^0.2.1"
   }
 }
