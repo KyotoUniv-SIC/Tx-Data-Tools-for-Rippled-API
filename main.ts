@@ -20,6 +20,7 @@ const startLedgerIndex = 32570;
 const endLedgerIndex = 4184823;
 
 const split = Math.floor((endLedgerIndex - startLedgerIndex) / threads);
+console.log("Each thread processes " + split);
 
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const rpcClient = new RpcClient<LedgerService>({
@@ -78,33 +79,67 @@ function ledger(thread: number) {
     header: headerWithTitle,
   });
 
-  get(startLedgerIndex + thread * split)
+  get(start)
+    // エラーの場合3回トライ
     .catch((err) => {
-      console.error(err);
-      return undefined;
+      console.error("Ledger #" + start + "1st error" + err.code);
+      delay(10);
+      return get(startLedgerIndex + thread * split);
+    })
+    .catch((err) => {
+      console.error("Ledger #" + start + "2nd error" + err.code);
+      delay(10);
+      return get(startLedgerIndex + thread * split);
+    })
+    .catch((err) => {
+      console.error("Ledger #" + start + "3rd error" + err.code);
+      console.log("Ledger #" + start + " is not registered.");
+      return;
     })
     .then(async (result) => {
       await csvWriterWithHeader
         .writeRecords(result?.data.result.ledger.transactions)
         .then(async () => {
-          console.log("Write ledger #" + startLedgerIndex + thread * split);
+          console.log("Writing ledger #" + start + "~");
 
-          for (
-            let i = startLedgerIndex + thread * split + 1;
-            i <= startLedgerIndex + (thread + 1) * split;
-            i++
-          ) {
+          for (let i = start + 1; i <= end; i++) {
             await get(i)
+              // エラーの場合5回トライ
               .catch((err) => {
-                console.error(err);
-                return undefined;
+                console.error("ledger #" + i + " 1st error" + err.code);
+                delay(10);
+                return get(i);
+              })
+              .catch((err) => {
+                console.error("ledger #" + i + " 2nd error" + err.code);
+                delay(10);
+                return get(i);
+              })
+              .catch((err) => {
+                console.error("ledger #" + i + " 3rd error" + err.code);
+                delay(10);
+                return get(i);
+              })
+              .catch((err) => {
+                console.error("ledger #" + i + " 4th error" + err.code);
+                delay(10);
+                return get(i);
+              })
+              .catch((err) => {
+                console.error("ledger #" + i + " 5th error" + err.code);
+                return;
               })
               .then(async (result) => {
-                await csvWriter
-                  .writeRecords(result?.data.result.ledger.transactions)
-                  .then(() => {
-                    console.log("Write ledger #" + i);
-                  });
+                if (result) {
+                  await csvWriter.writeRecords(
+                    result?.data.result.ledger.transactions
+                  );
+                  // .then(() => {
+                  //   console.log("Write ledger #" + i);
+                  // });
+                } else {
+                  console.log("Error Detected Ledger #" + i);
+                }
               });
           }
         });
@@ -135,4 +170,10 @@ async function get(ledgerIndex: number) {
     jsonrpc: "2.0",
   });
   return result;
+}
+
+function delay(second: number) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, second * 1000);
+  });
 }
