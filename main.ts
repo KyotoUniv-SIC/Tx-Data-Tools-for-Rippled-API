@@ -18,6 +18,8 @@ const threads = 24;
 // 開始台帳番号と終了台帳番号を指定
 const startLedgerIndex = 32570;
 const endLedgerIndex = 4184823;
+// 保存先を指定
+const path = "/var/tmp";
 
 const split = Math.floor((endLedgerIndex - startLedgerIndex) / threads);
 console.log("Each thread processes " + split);
@@ -65,17 +67,17 @@ function ledger(thread: number) {
   const end =
     thread == threads - 1
       ? endLedgerIndex
-      : startLedgerIndex + (thread + 1) * split;
+      : startLedgerIndex + (thread + 1) * split - 1;
   const csvWriter = createCsvWriter({
     // 保存する先のパス(すでにファイルがある場合は上書き保存)
-    path: "/var/tmp/ledger" + start + "-" + end + ".csv",
+    path: path + "/ledger" + start + "-" + end + ".csv",
     // 出力する項目(ここにない項目はスキップされる)
     header: headers,
     append: true,
   });
 
   const csvWriterWithHeader = createCsvWriter({
-    path: "/var/tmp/ledger" + start + "-" + end + ".csv",
+    path: path + "/ledger" + start + "-" + end + ".csv",
     header: headerWithTitle,
   });
 
