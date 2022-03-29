@@ -129,6 +129,7 @@ function ledger(thread: number) {
               })
               .catch((err) => {
                 console.error("ledger #" + i + " 5th error" + err.code);
+                console.log("Ledger #" + i + " is not registered.");
                 return;
               })
               .then(async (result) => {
